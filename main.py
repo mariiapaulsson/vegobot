@@ -1,19 +1,18 @@
-from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from openai import OpenAI
-import os
 
-app = FastAPI()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# Tillåt Wix-domäner för CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # <--- tillåt ALLA domäner
+    allow_origins=[
+        "https://editor.wix.com",
+        "https://www.wix.com",
+        "https://*.wixsite.com"
+    ],
+    allow_origin_regex="https://.*\\.wixsite\\.com",  # tillåter dina live-sidor
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 
 # Systemprompt för AI:n
