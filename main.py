@@ -1,21 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-import openai
+from openai import OpenAI
 import os
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = FastAPI()
 
-# 👇 CORS-inställning som funkar i både Wix-editor & publicerad sida
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://editor.wix.com",
-        "https://www.wix.com",
-        "https://*.wixsite.com"
-    ],
-    allow_origin_regex=r"https://.*\.wixsite\.com",
+    allow_origins=["*"],  # För test – byt ut till Wix-sidor i produktion
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,13 +20,13 @@ async def ask(request: Request):
     user_message = data.get("message")
 
     if not user_message:
-        return {"response": "Jag fick inget meddelande att svara på."}
+        return {"response": "Inget meddelande mottaget."}
 
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # eller gpt-4 om du har tillgång
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "Du är en hjälpsam vego-assistent som ger smarta mattips till köttälskare."},
+                {"role": "system", "content": "Du är en hjälpsam vego-assistent som ger mattips till köttälskare."},
                 {"role": "user", "content": user_message}
             ],
             temperature=0.7
