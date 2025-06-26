@@ -8,7 +8,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Tillåt Wix för testning
+    allow_origins=["*"],  # För test – byt ut till Wix-sidor i produktion
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
