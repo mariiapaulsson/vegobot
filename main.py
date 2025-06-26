@@ -1,22 +1,39 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
+import os
 
-app = Flask(__name__)
-CORS(app)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+app = FastAPI()
 
-@app.route('/ask-chat', methods=['POST'])
-def ask_chat():
-    data = request.get_json()
-    user_message = data.get("message", "")
-    print("Användarens fråga:", user_message)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Tillåt Wix för testning
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    # Här kan du lägga till logik med OpenAI eller andra receptfunktioner
-    if "tomat" in user_message.lower():
-        response = "Här är ett recept med tomat: Tomatsoppa med basilika!"
-    else:
-        response = f"Jag hörde att du skrev: {user_message}"
+@app.post("/ask")
+async def ask(request: Request):
+    data = await request.json()
+    user_message = data.get("message")
 
-    return jsonify({"response": response})
+    if not user_message:
+        return {"response": "Inget meddelande mottaget."}
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Du är en hjälpsam vego-assistent som ger mattips till köttälskare."},
+                {"role": "user", "content": user_message}
+            ],
+            temperature=0.7
+        )
+
+        gpt_response = response.choices[0].message.content.strip()
+        return {"response": gpt_response}
+
+    except Exception as e:
+        return {"response": f"Något gick fel: {str(e)}"}
